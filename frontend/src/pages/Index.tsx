@@ -79,13 +79,13 @@ const Index = () => {
                 <Package className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Store Assistant</h1>
-                <p className="text-sm text-gray-600">Power Tools Department</p>
+                <h1 className="text-2xl font-bold text-gray-900">Smart-Shelf Agent </h1>
+                <p className="text-sm text-gray-600">BitStorm Solutions</p>
               </div>
             </div>
             <div className="flex items-center space-x-2 text-sm text-gray-600">
               <MapPin className="w-4 h-4" />
-              <span>Aisle 12, Section B</span>
+              <span>Bosch Center, Cluj-Napoca </span>
             </div>
           </div>
         </div>
