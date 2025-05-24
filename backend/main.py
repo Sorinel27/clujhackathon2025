@@ -18,7 +18,7 @@ def agent_page():
 
         try:
             r = requests.post(
-                "https://api.flockx.io/api/v1/agents/4b1fbb8e-ed44-4a88-9f63-b54107847a3c/stream_prompt",
+                "https://api.flockx.io/api/v1/agents/4b1fbb8e-ed44-4a88-9f63-b54107847a3c/prompt",
                 headers={
                     "Authorization": f'Token {FLOCKX_API_KEY}'
                 },
@@ -48,7 +48,7 @@ def index():
     response = requests.post(
         "https://api.flockx.io/api/v1/agents/4b1fbb8e-ed44-4a88-9f63-b54107847a3c/prompt",
         headers={
-            "Authorization": f'Token '
+            "Authorization": f'Token {FLOCKX_API_KEY}'
         },
         json={
             'prompt': "What is the current status of the smart shelf AI agent?",
