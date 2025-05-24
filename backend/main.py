@@ -48,7 +48,7 @@ def index():
     response = requests.post(
         "https://api.flockx.io/api/v1/agents/4b1fbb8e-ed44-4a88-9f63-b54107847a3c/prompt",
         headers={
-            "Authorization": f'Token 5f9bfb479e6d2cfa627c640edd1bdafc5d7c0cb9'
+            "Authorization": f'Token '
         },
         json={
             'prompt': "What is the current status of the smart shelf AI agent?",
