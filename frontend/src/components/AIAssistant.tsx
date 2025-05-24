@@ -55,52 +55,48 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ product, onClose }) => {
     setMessages(prev => [...prev, newMessage]);
   };
 
-  const handleSendMessage = () => {
-    if (inputValue.trim()) {
-      addMessage('user', inputValue);
-      setInputValue('');
-      
-      // Simulate AI response
-      setIsTyping(true);
-      setTimeout(() => {
-        setIsTyping(false);
-        generateAIResponse(inputValue);
-      }, 1500);
-    }
-  };
-
-  const generateAIResponse = (userMessage: string) => {
-    const lowerMessage = userMessage.toLowerCase();
-    
-    if (lowerMessage.includes('alternative') || lowerMessage.includes('similar')) {
-      addMessage('assistant', "Here are some great alternatives I found:", [
-        'DEWALT DCD771C2 - €179.99',
-        'MAKITA DF331D - €159.99', 
-        'BLACK+DECKER BDCR8 - €89.99'
-      ]);
-    } else if (lowerMessage.includes('location') || lowerMessage.includes('where')) {
-      addMessage('assistant', "The item is located in Aisle 12, Section B, Shelf 3. I can guide you there if you'd like!");
-    } else if (lowerMessage.includes('price') || lowerMessage.includes('cost')) {
-      addMessage('assistant', `The ${product.name} is priced at €${product.price}. This is currently one of our best-value options in this category.`);
-    } else {
-      addMessage('assistant', "I'm here to help! You can ask me about product locations, alternatives, pricing, or any other questions about our tools.", [
-        'Show product location',
-        'Find alternatives',
-        'Compare prices',
-        'Technical specifications'
-      ]);
-    }
-  };
-
-  const handleSuggestionClick = (suggestion: string) => {
-    addMessage('user', suggestion);
-    
+  const handleSendMessage = async () => {
+  if (inputValue.trim()) {
+    addMessage('user', inputValue);
+    const userMessage = inputValue;
+    setInputValue('');
     setIsTyping(true);
-    setTimeout(() => {
+
+    try {
+      const response = await fetch('http://127.0.0.1:5000/agent-prompt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: userMessage, product }),
+      });
+      const data = await response.json();
+      // data should be { content: string, suggestions?: string[] }
+      addMessage('assistant', data.message);
+    } catch (error) {
+      addMessage('assistant', "Sorry, I couldn't process your request. Please try again.");
+    } finally {
       setIsTyping(false);
-      generateAIResponse(suggestion);
-    }, 1000);
-  };
+    }
+  }
+};
+
+const handleSuggestionClick = async (suggestion: string) => {
+  addMessage('user', suggestion);
+  setIsTyping(true);
+
+  try {
+    const response = await fetch('http://127.0.0.1:5000/agent-prompt', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: suggestion, product }),
+    });
+    const data = await response.json();
+    addMessage('assistant', data.message);
+  } catch (error) {
+    addMessage('assistant', "Sorry, I couldn't process your request. Please try again.");
+  } finally {
+    setIsTyping(false);
+  }
+};
 
   return (
     <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden animate-scale-in">
