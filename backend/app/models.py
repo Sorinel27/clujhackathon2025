@@ -25,6 +25,8 @@ class Product(db.Model):
     sku = db.Column(db.Text, unique=True, nullable=False)
     name = db.Column(db.Text, nullable=False)
     category = db.Column(db.Text, nullable=False)
+    description = db.Column(db.Text)
+    price = db.Column(db.Numeric(10, 2), nullable=False)
     shelf_stock = db.Column(db.Integer, nullable=False)
     warehouse_stock = db.Column(db.Integer, nullable=False)
     total_stock = db.Column(db.Integer)
@@ -36,6 +38,7 @@ class Product(db.Model):
     __table_args__ = (
         db.CheckConstraint('shelf_stock >= 0', name='shelf_stock_positive'),
         db.CheckConstraint('warehouse_stock >= 0', name='warehouse_stock_positive'),
+        db.CheckConstraint('price >= 0', name='price_non_negative'),
     )
 
     @property
