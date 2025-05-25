@@ -1,5 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 import sqlalchemy as sa
+from sqlalchemy.sql import func
+
 db = SQLAlchemy()
 
 
@@ -71,3 +73,16 @@ class Request(db.Model):
             name="valid_request_status"
         ),
     )
+
+
+class StockAlert(db.Model):
+    __tablename__ = 'stock_alerts'
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+    alert_type = db.Column(db.String(50), nullable=False)  # e.g. 'low_stock'
+    message = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
+    resolved_at = db.Column(db.DateTime(timezone=True), nullable=True)
+    resolved_by = db.Column(db.String(100), nullable=True)
+
+    product = db.relationship("Product", backref="alerts")

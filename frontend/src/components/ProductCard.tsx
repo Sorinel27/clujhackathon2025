@@ -1,18 +1,7 @@
 
 import React from 'react';
 import { Package, MapPin, AlertCircle, CheckCircle } from 'lucide-react';
-
-interface Product {
-  id: number;
-  name: string;
-  category: string;
-  brand: string;
-  price: number;
-  image: string;
-  availability: 'shelf' | 'warehouse' | 'out_of_stock';
-  stock: number;
-  description: string;
-}
+import { Product } from '@/types/Product';
 
 interface ProductCardProps {
   product: Product;
@@ -73,7 +62,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onRequest }) => {
       {/* Product Image */}
       <div className="aspect-square bg-gray-100 relative overflow-hidden">
         <img 
-          src={product.image} 
+          src={product.image || "/placeholder.jpg"} 
           alt={product.name}
           className="w-full h-full object-cover"
         />
@@ -112,8 +101,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onRequest }) => {
             <MapPin className="w-4 h-4" />
             <span>
               {product.availability === 'shelf' 
-                ? `${product.stock} available on shelf`
-                : `${product.stock} available in warehouse`
+                ? `${product.shelf_stock} available on shelf`
+                : `${product.warehouse_stock} available in warehouse`
               }
             </span>
           </div>

@@ -22,36 +22,34 @@ const EmployeeLogin = () => {
     navigate('/');
   };
 
-  const handleLogin = async () => {
-  try {
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/login`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        employee_code: formData.employee_code,
-        password: formData.password,
-      })
-    });
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault(); // 👈 stops page reload
+    setLoading(true);
 
-    if (!res.ok) {
-      throw new Error("Invalid credentials");
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          employee_code: formData.employee_code,
+          password: formData.password
+        }),
+        mode: "cors"
+      });
+
+      if (!res.ok) {
+        throw new Error("Invalid credentials");
+      }
+
+      const data = await res.json();
+      localStorage.setItem("employee", JSON.stringify(data));
+      window.location.href = "/employee-dashboard";
+    } catch (err: any) {
+      alert("Login failed: " + err.message);
+    } finally {
+      setLoading(false);
     }
-
-    const data = await res.json();
-    console.log("Logged in:", data);
-    
-    // Save to localStorage/sessionStorage if needed
-    localStorage.setItem("employee", JSON.stringify(data));
-    
-    // Redirect to dashboard
-    window.location.href = "/employee-dashboard";
-  } catch (err) {
-    alert("Login failed: " + err.message);
-  }
-};
-
+  };
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
       ...prev,
@@ -140,7 +138,7 @@ const EmployeeLogin = () => {
         <div className="text-center mt-6 p-4 bg-blue-50 rounded-lg">
           <p className="text-sm text-blue-800 font-medium mb-2">Demo Instructions:</p>
           <p className="text-xs text-blue-700">
-            Use any Employee ID (e.g., "EMP001") and password (e.g., "password123"). 
+            Use any Employee ID (e.g., "EMP001") and password (e.g., "password123").
             Account will be created automatically for demo purposes.
           </p>
         </div>

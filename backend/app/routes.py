@@ -1,9 +1,11 @@
+from datetime import datetime
+
 import requests
 import os
 from flask import Blueprint, jsonify, request
 from werkzeug.security import check_password_hash
 
-from .models import db, Employee, Product, Request
+from .models import db, Employee, Product, Request, StockAlert
 
 FLOCKX_API_KEY = os.getenv("flockx_api_key")
 
@@ -120,3 +122,31 @@ def login():
         "surname": employee.surname,
         "category": employee.category
     })
+
+@main.route("/api/products/<int:product_id>", methods=["PATCH"])
+def update_product(product_id):
+    data = request.get_json()
+    product = Product.query.get_or_404(product_id)
+
+    product.shelf_stock = data.get("shelf_stock", product.shelf_stock)
+    product.warehouse_stock = data.get("warehouse_stock", product.warehouse_stock)
+    product.total_stock = product.shelf_stock + product.warehouse_stock
+    product.last_updated = datetime.utcnow()
+
+    db.session.commit()
+    return jsonify({"success": True})
+
+@main.route('/api/alerts', methods=['GET'])
+def get_alerts():
+    alerts = StockAlert.query.filter_by(resolved_at=None).all()
+    return jsonify([
+        {
+            "id": alert.id,
+            "product_id": alert.product_id,
+            "alert_type": alert.alert_type,
+            "message": alert.message,
+            "created_at": alert.created_at.isoformat(),
+            "resolved_at": alert.resolved_at,
+            "resolved_by": alert.resolved_by
+        } for alert in alerts
+    ])

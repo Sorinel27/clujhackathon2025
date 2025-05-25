@@ -1,101 +1,67 @@
-
 import React, { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { Package, AlertTriangle, Users, TrendingDown, RefreshCw } from 'lucide-react';
+import { Package, AlertTriangle, TrendingDown, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import StockOverview from '@/components/StockOverview';
 import AlertsPanel from '@/components/AlertsPanel';
 import RequestsPanel from '@/components/RequestsPanel';
+import { StockAlert } from '@/types/StockAlert';
 
-interface Product {
-  id: string;
-  name: string;
-  category: string;
-  sku: string;
-  shelf_stock: number;
-  warehouse_stock: number;
-  total_stock: number;
-  last_updated: string;
-}
 
-interface StockAlert {
-  id: string;
-  product_id: string;
-  alert_type: string;
-  message: string;
-  created_at: string;
-  resolved_at: string | null;
-  resolved_by: string | null;
-}
+import { Product } from '@/types/Product';
 
 const EmployeeDashboard = () => {
   const [products, setProducts] = useState<Product[]>([]);
-  const [alerts, setAlerts] = useState<StockAlert[]>([]);
   const [loading, setLoading] = useState(true);
   const [employee, setEmployee] = useState<any>(null);
+  const [alerts, setAlerts] = useState<StockAlert[]>([]);
+
 
   useEffect(() => {
+    const employeeData = localStorage.getItem("employee");
+    if (employeeData) {
+      setEmployee(JSON.parse(employeeData));
+    }
     fetchData();
-    setupRealtimeSubscriptions();
-    checkEmployee();
   }, []);
 
-  const checkEmployee = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      // In a real app, you'd fetch employee data from your employees table
-      setEmployee({ name: 'Employee User', role: 'Staff' });
-    }
-  };
-
   const fetchData = async () => {
-    try {
-      const [productsResponse, alertsResponse] = await Promise.all([
-        supabase.from('products').select('*').order('name'),
-        supabase.from('stock_alerts').select('*').is('resolved_at', null).order('created_at', { ascending: false })
-      ]);
+  try {
+    const [productsRes, alertsRes] = await Promise.all([
+      fetch(`${import.meta.env.VITE_API_URL}/api/products`),
+      fetch(`${import.meta.env.VITE_API_URL}/api/alerts`) // create this endpoint if you haven’t yet
+    ]);
 
-      if (productsResponse.data) setProducts(productsResponse.data);
-      if (alertsResponse.data) setAlerts(alertsResponse.data);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    if (!productsRes.ok || !alertsRes.ok) throw new Error("Failed to fetch data");
 
-  const setupRealtimeSubscriptions = () => {
-    const productsChannel = supabase
-      .channel('products-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, (payload) => {
-        console.log('Product change:', payload);
-        fetchData();
-      })
-      .subscribe();
+    const productsData = await productsRes.json();
+    const alertsData = await alertsRes.json();
 
-    const alertsChannel = supabase
-      .channel('alerts-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'stock_alerts' }, (payload) => {
-        console.log('Alert change:', payload);
-        fetchData();
-      })
-      .subscribe();
+    setProducts(productsData);
+    setAlerts(alertsData);
+  } catch (error) {
+    console.error("Error fetching data:", error);
+  } finally {
+    setLoading(false);
+  }
+};
 
-    return () => {
-      supabase.removeChannel(productsChannel);
-      supabase.removeChannel(alertsChannel);
-    };
-  };
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
+  const handleLogout = () => {
+    localStorage.removeItem("employee");
     window.location.href = '/employee-login';
   };
 
-  const lowStockProducts = products.filter(p => p.shelf_stock <= (p.total_stock * 0.3));
+  const lowStockProducts = products.filter(p => p.shelf_stock + p.warehouse_stock < 5);
   const totalProducts = products.length;
-  const totalAlerts = alerts.length;
+
+  const stockAlerts = lowStockProducts.map((product) => ({
+    id: product.id,
+    product_id: product.id,
+    alert_type: "low_stock",
+    message: `Low stock for ${product.name}`,
+    created_at: new Date().toISOString(),
+  }));
 
   if (loading) {
     return (
@@ -126,7 +92,7 @@ const EmployeeDashboard = () => {
             <div className="flex items-center space-x-4">
               <div className="text-right">
                 <p className="text-sm font-medium text-gray-900">{employee?.name}</p>
-                <p className="text-xs text-gray-600">{employee?.role}</p>
+                <p className="text-xs text-gray-600">{employee?.category}</p>
               </div>
               <Button onClick={handleLogout} variant="outline" size="sm">
                 Logout
@@ -163,7 +129,7 @@ const EmployeeDashboard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Active Alerts</p>
-                <p className="text-2xl font-bold text-orange-600">{totalAlerts}</p>
+                <p className="text-2xl font-bold text-orange-600">{lowStockProducts.length}</p>
               </div>
               <AlertTriangle className="w-8 h-8 text-orange-500" />
             </div>
@@ -181,12 +147,12 @@ const EmployeeDashboard = () => {
         </div>
 
         {/* Smart Shelf Alerts */}
-        {alerts.length > 0 && (
+        {lowStockProducts.length > 0 && (
           <div className="mb-6">
             <Alert className="border-orange-200 bg-orange-50">
               <AlertTriangle className="h-4 w-4 text-orange-600" />
               <AlertDescription className="text-orange-800">
-                <strong>Smart Shelf Alert:</strong> {alerts.length} items need attention due to low shelf stock.
+                <strong>Smart Shelf Alert:</strong> {lowStockProducts.length} items are low in stock.
               </AlertDescription>
             </Alert>
           </div>
@@ -200,7 +166,7 @@ const EmployeeDashboard = () => {
 
           {/* Side Panels */}
           <div className="space-y-6">
-            <AlertsPanel alerts={alerts} />
+            <AlertsPanel alerts={alerts} /> {/* 🔥 passes real alerts */}
             <RequestsPanel />
           </div>
         </div>

@@ -1,28 +1,17 @@
-
 import React, { useState } from 'react';
 import { Package, Edit3, Save, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
-interface Product {
-  id: string;
-  name: string;
-  category: string;
-  sku: string;
-  shelf_stock: number;
-  warehouse_stock: number;
-  total_stock: number;
-  last_updated: string;
-}
+import { Product } from '@/types/Product';
 
 interface StockOverviewProps {
   products: Product[];
 }
 
 const StockOverview: React.FC<StockOverviewProps> = ({ products }) => {
-  const [editingProduct, setEditingProduct] = useState<string | null>(null);
+  const [editingProduct, setEditingProduct] = useState<number | null>(null);
   const [editValues, setEditValues] = useState<{ shelf_stock: number; warehouse_stock: number }>({
     shelf_stock: 0,
     warehouse_stock: 0
@@ -42,21 +31,20 @@ const StockOverview: React.FC<StockOverviewProps> = ({ products }) => {
     setEditValues({ shelf_stock: 0, warehouse_stock: 0 });
   };
 
-  const saveChanges = async (productId: string) => {
+  const saveChanges = async (productId: number) => {
     try {
-      const totalStock = editValues.shelf_stock + editValues.warehouse_stock;
-      
-      const { error } = await supabase
-        .from('products')
-        .update({
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/products/${productId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
           shelf_stock: editValues.shelf_stock,
-          warehouse_stock: editValues.warehouse_stock,
-          total_stock: totalStock,
-          last_updated: new Date().toISOString()
+          warehouse_stock: editValues.warehouse_stock
         })
-        .eq('id', productId);
+      });
 
-      if (error) throw error;
+      if (!res.ok) throw new Error("Failed to update product");
 
       toast({
         title: "Stock Updated",

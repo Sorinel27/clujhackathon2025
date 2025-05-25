@@ -4,6 +4,8 @@ import { AlertTriangle, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { Product } from '@/types/Product';
+
 
 interface StockAlert {
   id: string;
