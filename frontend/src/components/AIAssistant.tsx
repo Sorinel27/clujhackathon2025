@@ -63,7 +63,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ product, onClose }) => {
     setIsTyping(true);
 
     try {
-      const response = await fetch('https://clujhackathon2025.onrender.com/agent-prompt', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/agent-prompt`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: userMessage, product }),
@@ -84,7 +84,7 @@ const handleSuggestionClick = async (suggestion: string) => {
   setIsTyping(true);
 
   try {
-    const response = await fetch('https://clujhackathon2025.onrender.com/agent-prompt', {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/agent-prompt`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: suggestion, product }),

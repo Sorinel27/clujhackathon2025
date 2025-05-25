@@ -1,6 +1,7 @@
 import requests
 import os
 from flask import Blueprint, jsonify, request
+from .models import db, Employee, Product, Request
 
 FLOCKX_API_KEY = os.getenv("flockx_api_key")
 
@@ -38,3 +39,64 @@ def agent_page():
             return jsonify({"error": f"Network Error: {str(e)}"}), 500
         except ValueError:
             return jsonify({"error": "Response is not valid JSON", "raw": r.text}), 500
+
+@main.route("/api/products", methods=["GET"])
+def get_products():
+    products = Product.query.all()
+    return jsonify([
+        {
+            "id": p.id,
+            "sku": p.sku,
+            "name": p.name,
+            "category": p.category,
+            "shelf_stock": p.shelf_stock,
+            "warehouse_stock": p.warehouse_stock,
+            "total_stock": p.shelf_stock + p.warehouse_stock,
+            "last_updated": p.last_updated.isoformat() if p.last_updated else None
+        }
+        for p in products
+    ])
+
+
+# ===========================
+# REQUESTS
+# ===========================
+
+@main.route("/api/requests", methods=["POST"])
+def create_request():
+    data = request.get_json()
+    new_request = Request(
+        product_id=data["product_id"],
+        district=data["district"],
+        status="pending"
+    )
+    db.session.add(new_request)
+    db.session.commit()
+    return jsonify({"message": "Request created", "id": new_request.id}), 201
+
+
+@main.route("/api/requests/<int:req_id>/mark-delivered", methods=["PATCH"])
+def mark_delivered(req_id):
+    req = Request.query.get(req_id)
+    if not req:
+        return jsonify({"error": "Request not found"}), 404
+
+    req.status = "delivered"
+    db.session.commit()
+    return jsonify({"message": "Request marked as delivered"})
+
+
+@main.route("/api/requests", methods=["GET"])
+def get_requests():
+    requests = Request.query.all()
+    return jsonify([
+        {
+            "id": r.id,
+            "product_id": r.product_id,
+            "district": r.district,
+            "status": r.status,
+            "requested_at": r.requested_at.isoformat() if r.requested_at else None,
+            "delivered_at": r.delivered_at.isoformat() if r.delivered_at else None
+        }
+        for r in requests
+    ])
