@@ -123,6 +123,7 @@ def login():
         "category": employee.category
     })
 
+
 @main.route("/api/products/<int:product_id>", methods=["PATCH"])
 def update_product(product_id):
     data = request.get_json()
@@ -135,6 +136,7 @@ def update_product(product_id):
 
     db.session.commit()
     return jsonify({"success": True})
+
 
 @main.route('/api/alerts', methods=['GET'])
 def get_alerts():
