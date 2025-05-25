@@ -21,6 +21,11 @@ const Index = () => {
       .catch(err => console.error("Failed to fetch products", err));
   }, []);
 
+  const getStockStatus = (product: Product) => {
+    if (product.total_stock === 0) return 'out_of_stock';
+    if (product.shelf_stock / product.total_stock <= 0.3) return 'low';
+    return 'in_stock';
+  };
 
   const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -128,8 +133,25 @@ const Index = () => {
 
             {/* AI Assistant */}
             <AIAssistant
-              product={selectedProduct}
-              onClose={() => setShowAssistant(false)}
+              product={{
+                ...(selectedProduct || {
+                  id: 0,
+                  name: "AI Assistant",
+                  brand: "",
+                  category: "",
+                  price: 0,
+                  availability: "out_of_stock",
+                  total_stock: 0,
+                  shelf_stock: 0,
+                  warehouse_stock: 0,
+                  description: "",
+                  image: ""
+                }),
+                status: selectedProduct
+                  ? getStockStatus(selectedProduct)
+                  : "out_of_stock"
+              }}
+              onClose={() => { }}
             />
             {/* Quick Actions */}
             <div className="bg-white rounded-2xl shadow-sm p-6">
