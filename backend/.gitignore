@@ -1,4 +1,5 @@
 env/
 templates/
 .idea/
-.flaskenv
+.flask
+scripts/

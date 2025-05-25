@@ -1,12 +1,14 @@
 import requests
 import os
 from flask import Blueprint, jsonify, request
+from werkzeug.security import check_password_hash
+
 from .models import db, Employee, Product, Request
 
 FLOCKX_API_KEY = os.getenv("flockx_api_key")
 
-
 main = Blueprint("main", __name__)
+
 
 @main.route('/agent-prompt', methods=['POST'])
 def agent_page():
@@ -39,6 +41,7 @@ def agent_page():
             return jsonify({"error": f"Network Error: {str(e)}"}), 500
         except ValueError:
             return jsonify({"error": "Response is not valid JSON", "raw": r.text}), 500
+
 
 @main.route("/api/products", methods=["GET"])
 def get_products():
@@ -100,3 +103,20 @@ def get_requests():
         }
         for r in requests
     ])
+
+
+@main.route("/api/login", methods=["POST"])
+def login():
+    data = request.get_json()
+    employee = Employee.query.filter_by(employee_code=data["employee_code"]).first()
+
+    if not employee or not check_password_hash(employee.password_hash, data["password"]):
+        return jsonify({"error": "Invalid credentials"}), 401
+
+    return jsonify({
+        "id": employee.id,
+        "employee_code": employee.employee_code,
+        "name": employee.name,
+        "surname": employee.surname,
+        "category": employee.category
+    })

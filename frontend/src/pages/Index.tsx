@@ -12,43 +12,17 @@ const Index = () => {
   const [requestStatus, setRequestStatus] = useState<string | null>(null);
   const [showAssistant, setShowAssistant] = useState(false);
 
-  const mockProducts: Product[] = [
-    {
-      id: 1,
-      name: 'BOSCH Professional GSB 120-LI Cordless Drill',
-      category: 'Power Tools',
-      brand: 'BOSCH',
-      price: 149.99,
-      image: '/placeholder.svg',
-      availability: 'warehouse',
-      stock: 3,
-      description: 'Professional cordless drill with Li-ion battery, 12V, 30Nm torque'
-    },
-    {
-      id: 2,
-      name: 'DEWALT DCD771C2 Compact Drill Driver Kit',
-      category: 'Power Tools',
-      brand: 'DEWALT',
-      price: 179.99,
-      image: '/placeholder.svg',
-      availability: 'shelf',
-      stock: 8,
-      description: 'Compact and lightweight drill driver with 2 batteries included'
-    },
-    {
-      id: 3,
-      name: 'BLACK+DECKER BDCR8-XE Drill Driver',
-      category: 'Power Tools',
-      brand: 'BLACK+DECKER',
-      price: 89.99,
-      image: '/placeholder.svg',
-      availability: 'out_of_stock',
-      stock: 0,
-      description: 'Cordless drill driver, 8V Li-ion battery'
-    }
-  ];
+  const [products, setProducts] = useState<Product[]>([]);
 
-  const filteredProducts = mockProducts.filter(product =>
+  useEffect(() => {
+    fetch(`${import.meta.env.VITE_API_URL}/api/products`)
+      .then(res => res.json())
+      .then(data => setProducts(data))
+      .catch(err => console.error("Failed to fetch products", err));
+  }, []);
+
+
+  const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     product.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
     product.category.toLowerCase().includes(searchQuery.toLowerCase())
@@ -97,7 +71,7 @@ const Index = () => {
           <div className="lg:col-span-2 space-y-6">
             {/* Search Section */}
             <div className="bg-white rounded-2xl shadow-sm p-6">
-              <SearchBar 
+              <SearchBar
                 value={searchQuery}
                 onChange={setSearchQuery}
                 placeholder="Search for drills, saws, tools..."
@@ -117,7 +91,7 @@ const Index = () => {
                   </div>
                 </div>
               )}
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {filteredProducts.map((product) => (
                   <ProductCard
@@ -142,8 +116,8 @@ const Index = () => {
           <div className="space-y-6">
             {/* Status Panel */}
             {requestStatus && selectedProduct && (
-              <StatusPanel 
-                status={requestStatus} 
+              <StatusPanel
+                status={requestStatus}
                 product={selectedProduct}
                 onClose={() => {
                   setRequestStatus(null);
@@ -154,7 +128,7 @@ const Index = () => {
 
             {/* AI Assistant */}
             {showAssistant && (
-              <AIAssistant 
+              <AIAssistant
                 product={selectedProduct}
                 onClose={() => setShowAssistant(false)}
               />

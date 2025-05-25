@@ -11,8 +11,15 @@ class Employee(db.Model):
     name = db.Column(db.Text, nullable=False)
     surname = db.Column(db.Text, nullable=False)
     password_hash = db.Column(db.Text, nullable=False)
-    position = db.Column(db.Text, nullable=False)
+    category = db.Column(db.String(50), nullable=False)
     created_at = db.Column(db.DateTime(timezone=True), server_default=sa.func.now())
+
+    __table_args__ = (
+        db.CheckConstraint(
+            "category IN ('Garden', 'DIY', 'Construction', 'Tools')",
+            name="valid_category"
+        ),
+    )
 
     def __repr__(self):
         return f'<Employee {self.name}>'

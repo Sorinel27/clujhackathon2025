@@ -14,7 +14,7 @@ const EmployeeLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    employeeId: '',
+    employee_code: '',
     password: ''
   });
 
@@ -22,56 +22,35 @@ const EmployeeLogin = () => {
     navigate('/');
   };
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      // For demo purposes, use employee ID as email
-      const email = `${formData.employeeId}@company.com`;
-      
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email,
+  const handleLogin = async () => {
+  try {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        employee_code: formData.employee_code,
         password: formData.password,
-      });
+      })
+    });
 
-      if (error) {
-        // If employee doesn't exist, create account
-        if (error.message.includes('Invalid login credentials')) {
-          const { error: signUpError } = await supabase.auth.signUp({
-            email: email,
-            password: formData.password,
-            options: {
-              data: {
-                employee_id: formData.employeeId,
-                role: 'employee'
-              }
-            }
-          });
-          
-          if (signUpError) throw signUpError;
-          
-          toast({
-            title: "Account Created",
-            description: "Employee account created and logged in successfully.",
-          });
-        } else {
-          throw error;
-        }
-      }
-
-      navigate('/employee-dashboard');
-    } catch (error: any) {
-      console.error('Login error:', error);
-      toast({
-        title: "Login Failed",
-        description: error.message || "Invalid credentials. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
+    if (!res.ok) {
+      throw new Error("Invalid credentials");
     }
-  };
+
+    const data = await res.json();
+    console.log("Logged in:", data);
+    
+    // Save to localStorage/sessionStorage if needed
+    localStorage.setItem("employee", JSON.stringify(data));
+    
+    // Redirect to dashboard
+    window.location.href = "/employee-dashboard";
+  } catch (err) {
+    alert("Login failed: " + err.message);
+  }
+};
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -105,14 +84,14 @@ const EmployeeLogin = () => {
         {/* Login Form */}
         <form onSubmit={handleLogin} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="employeeId" className="text-sm font-medium text-gray-700">
+            <Label htmlFor="employee_code" className="text-sm font-medium text-gray-700">
               Employee ID
             </Label>
             <Input
-              id="employeeId"
+              id="employee_code"
               type="text"
-              value={formData.employeeId}
-              onChange={(e) => handleInputChange('employeeId', e.target.value)}
+              value={formData.employee_code}
+              onChange={(e) => handleInputChange('employee_code', e.target.value)}
               placeholder="Enter your employee ID"
               className="h-12 text-base"
               required
