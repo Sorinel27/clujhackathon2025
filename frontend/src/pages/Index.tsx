@@ -127,13 +127,10 @@ const Index = () => {
             )}
 
             {/* AI Assistant */}
-            {showAssistant && (
-              <AIAssistant
-                product={selectedProduct}
-                onClose={() => setShowAssistant(false)}
-              />
-            )}
-
+            <AIAssistant
+              product={selectedProduct}
+              onClose={() => setShowAssistant(false)}
+            />
             {/* Quick Actions */}
             <div className="bg-white rounded-2xl shadow-sm p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
